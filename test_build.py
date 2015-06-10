@@ -40,33 +40,29 @@ class Camera(object):
                 self.y_scroll = True
                 self.update(self.x_scroll, self.y_scroll, 0, -5)
 
-        # Upleft scrolling condition
-        elif p1.xPos - p1.yPos < 50:
-            print(True)
-            p1.xPos = WIDTHCENTER - 30
-            p1.yPos = HEIGHTCENTER - 30
-            if p1.moveUp == True and p1.moveLeft == True and p1.moveDown == False and p1.moveLeft == False:                
-                self.x_scroll = True
-                self.y_scroll = True
-                self.update(self.x_scroll, self.y_scroll, -5, 5)
-
-        # Upright scrolling condition
-        elif p1.xPos > (WIDTHCENTER + 50) - p1.playerWidth and p1.yPos < HEIGHTCENTER - 50:
-            p1.xPos = (WIDTHCENTER + 30) - p1.playerWidth
-            p1.yPos = HEIGHTCENTER - 30
-            
-        
-    
     def update(self, x_scroll, y_scroll, x_rate, y_rate):
-        for b in block_list:
+        for e in levelOne.entities_list:
             if x_scroll == False and y_scroll == True:
-                b.rect.top += y_rate
+                e.rect.top += y_rate
             if x_scroll == True and y_scroll == False:
-                b.rect.left += x_rate
-            if x_scroll == True and y_scroll == True:                
-                b.rect.left += x_rate
-                b.rect.top += y_rate
-        
+                e.rect.left += x_rate
+
+class Level:
+    def __init__(self):
+        self.block_list = []
+        self.entities_list = []
+        self.blit_list = []
+
+        self.isMid = True
+        self.isTop = False
+        self.isLeft = False
+        self.isRight = False
+
+    def clearLists(self):
+        pass
+
+    def blitImages(self):
+        [windowSurface.blit(b.image, b.rect) for b in self.blit_list]
 
 class Player(pygame.sprite.Sprite):
     def __init__(self):
@@ -115,7 +111,6 @@ class Player(pygame.sprite.Sprite):
                 if event.key == K_ESCAPE:
                     pygame.quit()
                     sys.exit()
-
                 elif event.key == K_UP:
                     self.upPressed = True
                     self.moveUp = True
@@ -175,31 +170,22 @@ class Player(pygame.sprite.Sprite):
 
         if self.moveUp or self.moveDown or self.moveLeft or self.moveRight:
             moveConductor.play()
-            if self.downPressed == True and self.leftPressed == True:
-                #camera.checkLocation()
-                self.animObjs['walkdownleft'].blit(windowSurface, (self.xPos, self.yPos))
-            elif self.upPressed == True and self.leftPressed == True:
-
-                camera.checkLocation()
-                self.animObjs['walkupleft'].blit(windowSurface, (self.xPos, self.yPos))
-            elif self.downPressed == True and self.rightPressed == True:
-                #camera.checkLocation()
-                self.animObjs['walkdownright'].blit(windowSurface, (self.xPos, self.yPos))
-            elif self.upPressed == True and self.rightPressed == True:
-                #camera.checkLocation()
-                self.animObjs['walkupright'].blit(windowSurface, (self.xPos, self.yPos))
-            elif self.direction == UP:
+            if self.direction == UP:
+                self.moveDown = self.moveLeft = self.moveRight = False
                 camera.checkLocation()
                 self.animObjs['walkup'].blit(windowSurface, (self.xPos, self.yPos))
             elif self.direction == DOWN:
+                self.moveUp = self.moveLeft = self.moveRight = False
                 camera.checkLocation()
                 self.animObjs['walkdown'].blit(windowSurface, (self.xPos, self.yPos))
             elif self.direction == LEFT:
+                self.moveUp = self.moveDown = self.moveRight = False
                 camera.checkLocation()
                 self.animObjs['walkleft'].blit(windowSurface, (self.xPos, self.yPos))
             elif self.direction == RIGHT:
+                self.moveUp = self.moveDown = self.moveLeft = False
                 camera.checkLocation()
-                self.animObjs['walkright'].blit(windowSurface, (self.xPos, self.yPos))            
+                self.animObjs['walkright'].blit(windowSurface, (self.xPos, self.yPos))           
 
             # move player
 
@@ -234,10 +220,31 @@ class Player(pygame.sprite.Sprite):
         if self.yPos > WINDOWHEIGHT - self.playerHeight:
             self.yPos = WINDOWHEIGHT - self.playerHeight
 
+class Background(pygame.sprite.Sprite):
+    def __init__(self, xPos, yPos, image):        
+        self.image = pygame.image.load(image)
+        self.rect = self.image.get_rect()
+        self.width, self.height = self.image.get_size()
+        self.rect.left = xPos
+        self.rect.top = yPos   
+
+    def draw(self):
+        windowSurface.blit(self.image, self.rect)
+
+    def blockPlayer(self, player):
+        if player.yPos < self.rect.top:            
+            levelTop()
+        elif player.yPos > self.rect.bottom - player.playerHeight:            
+            player.yPos = self.rect.bottom - player.playerHeight
+        elif player.xPos < self.rect.left:
+            player.xPos = self.rect.left
+        elif player.xPos > self.rect.right - player.playerWidth:
+            player.xPos = self.rect.right - player.playerWidth
+
 class Block(pygame.sprite.Sprite):
-    def __init__(self, xPos, yPos):     
+    def __init__(self, xPos, yPos, image):     
         
-        self.image = pygame.image.load('block1.gif')
+        self.image = pygame.image.load(image)
         self.rect = self.image.get_rect()
         self.rect.left = xPos
         self.rect.top = yPos
@@ -258,32 +265,85 @@ class Block(pygame.sprite.Sprite):
             if player.yPos < self.rect.bottom and player.yPos + player.playerHeight > self.rect.bottom - 10:
                 player.yPos = self.rect.bottom
             if player.yPos > self.rect.top - player.playerHeight and player.yPos < (self.rect.top - player.playerHeight) + 10:
-                player.yPos = self.rect.top - player.playerHeight  
+                player.yPos = self.rect.top - player.playerHeight
+
+
+
+def levelTop():
+    levelOne.isTop = True
+    levelOne.isLeft = levelOne.isRight = levelOne.isMid = False
+
+    [levelOne.block_list.remove(b) for b in levelOne.block_list]
+    [levelOne.entities_list.remove(e) for e in levelOne.entities_list]
+    [levelOne.blit_list.remove(b) for b in levelOne.blit_list]    
+
+    b1 = Block(200, 150, 'tree.gif')
+    b2 = Block(300, 50, 'tree.gif')
+
+    levelOne.block_list = [b1, b2]
+    levelOne.entities_list = [land, b1, b2]
+    [levelOne.blit_list.append(e) for e in levelOne.entities_list]
+
+    [b.drawBlock() for b in levelOne.block_list]
+
+    #land.blockPlayer(p1)
+    [b.blockPlayer(p1) for b in levelOne.block_list]
+
+    levelOne.blitImages()
+
+    land.rect.bottom = p1.yPos + p1.playerHeight
+
+def levelMid():
+    levelOne.isMid = True
+    levelOne.isLeft = levelOne.isRight = levelOne.isTop = False
+    
+    # setting up mid section of level
+    levelOne.block_list = [b1, b2, b3]
+    levelOne.entities_list = [land, b1, b2, b3]
+    [levelOne.blit_list.append(e) for e in entities_list]
+        
+    sea.draw()   
+
+    [b.drawBlock() for b in levelOne.block_list]
+        
+    land.blockPlayer(p1)
+    [b.blockPlayer(p1) for b in levelOne.block_list]
+
+    levelOne.blitImages()
+
+    
 
 def main():
     gameIsPlaying = True
 
     while gameIsPlaying:
 
-        b1.drawBlock()
+        sea.draw()
+
+        if levelOne.isMid == True:
+            levelMid()
+        elif levelOne.isTop == True:
+            levelTop()
+        elif levelOne.isLeft == True:
+            pass
         
+
+        levelMid()
+
         p1.move()
-
-        b1.blockPlayer(p1)
-        b2.blockPlayer(p1)
-        b3.blockPlayer(p1)
-        b4.blockPlayer(p1)
-        b5.blockPlayer(p1)
-        b6.blockPlayer(p1)
-
 
         pygame.display.update()
         windowSurface.fill(WHITE)
-        mainClock.tick(30)                 
+        mainClock.tick(30)
+
+        [levelOne.block_list.remove(b) for b in levelOne.block_list]
+        [levelOne.entities_list.remove(e) for e in levelOne.entities_list]
+        [levelOne.blit_list.remove(b) for b in levelOne.blit_list]
+
+    
+
+
         
-
-# Setting up game
-
 pygame.init()
 
 # All constant variables
@@ -315,26 +375,24 @@ windowSurface = pygame.display.set_mode((WINDOWWIDTH, WINDOWHEIGHT), 0, 32)
 pygame.display.set_caption('Summer Adventure Test')
 mainClock = pygame.time.Clock()
 
+levelOne = Level()
+
 p1 = Player()
 
-b1 = Block(100, 200)
-b2 = Block(400, 200)
-b3 = Block(-50, 400)
-b4 = Block(-500, 200)
-b5 = Block(100, -500)
-b6 = Block(400, 700)
+sea = Background(0, 0, 'sea.gif')
+land = Background(50, 50, 'land.gif')
+
+b1 = Block(100, 200, 'tree.gif')
+b2 = Block(300, 350, 'tree.gif')
+b3 = Block(350, 100, 'tree.gif')
+
 
 camera = Camera()
 
-block_list = []
-block_list.append(b1)
-block_list.append(b2)
-block_list.append(b3)
-block_list.append(b4)
-block_list.append(b5)
-block_list.append(b6)
+blit_list = []
+block_list = [b1, b2, b3]
+entities_list = [land, b1, b2, b3]
 
 moveConductor = pyganim.PygConductor(p1.animObjs)
 
 main()
-
