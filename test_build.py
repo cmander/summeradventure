@@ -4,6 +4,9 @@ import sys
 import time
 import pyganim
 
+class Font(pygame.font.Font):
+    pass
+
 class Camera(object):
     def checkLocation(self):
         # Checking player position to determine camera scrolling
@@ -64,6 +67,14 @@ class Level:
     def blitImages(self):
         [windowSurface.blit(b.image, b.rect) for b in self.blit_list]
 
+    def entitiesLists(self):
+        if self.isTop == True:
+            b1 = Block(100, 50, 'tree.gif')
+            b2 = Block(200, 50, 'tree.gif')
+            e_list = [land, b1, b2]
+            return e_list
+            
+
 class Player(pygame.sprite.Sprite):
     def __init__(self):
         
@@ -111,6 +122,11 @@ class Player(pygame.sprite.Sprite):
                 if event.key == K_ESCAPE:
                     pygame.quit()
                     sys.exit()
+                elif event.key == ord('a'):
+                    if menuBox.box_blit == False:
+                        menuBox.box_blit = True
+                    else:
+                        menuBox.box_blit = False
                 elif event.key == K_UP:
                     self.upPressed = True
                     self.moveUp = True
@@ -232,10 +248,24 @@ class Background(pygame.sprite.Sprite):
         windowSurface.blit(self.image, self.rect)
 
     def blockPlayer(self, player):
-        if player.yPos < self.rect.top:            
-            levelTop()
+        if player.yPos < self.rect.top:
+            if player.xPos > self.rect.left + 150 and player.xPos + player.playerWidth < self.rect.right - 150:
+                if levelOne.isTop == True:
+                    player.yPos = self.rect.top
+                else:
+                    land.rect.bottom = p1.yPos + p1.playerHeight
+                    levelTop()
+            else:
+                player.yPos = self.rect.top
         elif player.yPos > self.rect.bottom - player.playerHeight:            
-            player.yPos = self.rect.bottom - player.playerHeight
+            if player.xPos > self.rect.left + 150 and player.xPos + player.playerWidth < self.rect.right - 150:
+                if levelOne.isMid == True:
+                    player.yPos = self.rect.bottom - player.playerHeight
+                else:
+                    land.rect.top = p1.yPos
+                    levelMid()
+            else:
+                player.yPos = self.rect.top - player.playerHeight
         elif player.xPos < self.rect.left:
             player.xPos = self.rect.left
         elif player.xPos > self.rect.right - player.playerWidth:
@@ -252,7 +282,7 @@ class Block(pygame.sprite.Sprite):
 
     def drawBlock(self):
         self.block_list.append(self)
-        for b in block_list:
+        for b in levelOne.block_list:
             windowSurface.blit(b.image, b.rect)
 
     def blockPlayer(self, player):
@@ -267,51 +297,59 @@ class Block(pygame.sprite.Sprite):
             if player.yPos > self.rect.top - player.playerHeight and player.yPos < (self.rect.top - player.playerHeight) + 10:
                 player.yPos = self.rect.top - player.playerHeight
 
+class Box(pygame.sprite.Sprite):
+    def __init__(self, image, xPos, yPos):
+        self.image = pygame.image.load(image)
+        self.rect = self.image.get_rect()
+        self.width, self.height = self.image.get_size()
+        self.rect.left = xPos
+        self.rect.top = yPos
+        self.box_blit = False
 
+    def draw(self):
+        if self.box_blit == True:
+            p1.moveUp = p1.moveDown = p1.moveLeft = p1.moveRight = False
+            windowSurface.blit(self.image, self.rect)
 
 def levelTop():
     levelOne.isTop = True
-    levelOne.isLeft = levelOne.isRight = levelOne.isMid = False
+    levelOne.isLeft = levelOne.isRight = levelOne.isMid = False   
 
-    [levelOne.block_list.remove(b) for b in levelOne.block_list]
-    [levelOne.entities_list.remove(e) for e in levelOne.entities_list]
-    [levelOne.blit_list.remove(b) for b in levelOne.blit_list]    
-
-    b1 = Block(200, 150, 'tree.gif')
-    b2 = Block(300, 50, 'tree.gif')
-
-    levelOne.block_list = [b1, b2]
-    levelOne.entities_list = [land, b1, b2]
+    levelOne.block_list = [top_b1, top_b2]
+    levelOne.entities_list = [land, top_b1, top_b2]
     [levelOne.blit_list.append(e) for e in levelOne.entities_list]
 
     [b.drawBlock() for b in levelOne.block_list]
 
-    #land.blockPlayer(p1)
-    [b.blockPlayer(p1) for b in levelOne.block_list]
-
+    # ensuring correct placement of objects
+    top_b1.rect.left = land.rect.left + 100
+    top_b1.rect.top = land.rect.top + 100
+    top_b2.rect.left = land.rect.left + 300
+    top_b2.rect.top = land.rect.top + 200
+    
     levelOne.blitImages()
 
-    land.rect.bottom = p1.yPos + p1.playerHeight
 
 def levelMid():
     levelOne.isMid = True
     levelOne.isLeft = levelOne.isRight = levelOne.isTop = False
     
     # setting up mid section of level
-    levelOne.block_list = [b1, b2, b3]
-    levelOne.entities_list = [land, b1, b2, b3]
-    [levelOne.blit_list.append(e) for e in entities_list]
-        
-    sea.draw()   
+    levelOne.block_list = [mid_b1, mid_b2, mid_b3]
+    levelOne.entities_list = [land, mid_b1, mid_b2, mid_b3]
+    [levelOne.blit_list.append(e) for e in levelOne.entities_list]      
 
     [b.drawBlock() for b in levelOne.block_list]
-        
-    land.blockPlayer(p1)
-    [b.blockPlayer(p1) for b in levelOne.block_list]
 
-    levelOne.blitImages()
-
+    # ensuring correct placement of objects
+    mid_b1.rect.left = land.rect.left + 50
+    mid_b1.rect.top = land.rect.top + 75
+    mid_b2.rect.left = land.rect.left + 175
+    mid_b2.rect.top = land.rect.top + 275
+    mid_b3.rect.left = land.rect.left + 300
+    mid_b3.rect.top = land.rect.top + 100
     
+    levelOne.blitImages()
 
 def main():
     gameIsPlaying = True
@@ -325,22 +363,22 @@ def main():
         elif levelOne.isTop == True:
             levelTop()
         elif levelOne.isLeft == True:
-            pass
-        
+            pass             
 
-        levelMid()
+        p1.move()        
 
-        p1.move()
+        land.blockPlayer(p1)
+        [b.blockPlayer(p1) for b in levelOne.block_list]
 
-        pygame.display.update()
-        windowSurface.fill(WHITE)
-        mainClock.tick(30)
-
+        menuBox.draw()
+               
         [levelOne.block_list.remove(b) for b in levelOne.block_list]
         [levelOne.entities_list.remove(e) for e in levelOne.entities_list]
         [levelOne.blit_list.remove(b) for b in levelOne.blit_list]
 
-    
+        pygame.display.update()
+        windowSurface.fill(WHITE)
+        mainClock.tick(30)
 
 
         
@@ -366,14 +404,15 @@ LEVELWIDTH = 1000
 LEVELHEIGHT = 1000
 
 WINDOWWIDTH = 640
-WINDOWHEIGHT = 480
+WINDOWHEIGHT = 360
 WIDTHCENTER = WINDOWWIDTH / 2
 HEIGHTCENTER = WINDOWHEIGHT / 2
-
 
 windowSurface = pygame.display.set_mode((WINDOWWIDTH, WINDOWHEIGHT), 0, 32)
 pygame.display.set_caption('Summer Adventure Test')
 mainClock = pygame.time.Clock()
+
+menuBox = Box("menubox.gif", 20, 20)
 
 levelOne = Level()
 
@@ -382,16 +421,14 @@ p1 = Player()
 sea = Background(0, 0, 'sea.gif')
 land = Background(50, 50, 'land.gif')
 
-b1 = Block(100, 200, 'tree.gif')
-b2 = Block(300, 350, 'tree.gif')
-b3 = Block(350, 100, 'tree.gif')
+mid_b1 = Block(land.rect.top + 100, land.rect.left + 200, 'tree.gif')
+mid_b2 = Block(land.rect.top + 300, 350, 'tree.gif')
+mid_b3 = Block(land.rect.top + 350, 100, 'tree.gif')
 
+top_b1 = Block(land.rect.left + 50, land.rect.top + 50, 'tree.gif')
+top_b2 = Block(land.rect.left, land.rect.top + 10, 'tree.gif')
 
 camera = Camera()
-
-blit_list = []
-block_list = [b1, b2, b3]
-entities_list = [land, b1, b2, b3]
 
 moveConductor = pyganim.PygConductor(p1.animObjs)
 
