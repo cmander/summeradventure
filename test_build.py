@@ -4,8 +4,6 @@ import sys
 import time
 import pyganim
 
-class Font(pygame.font.Font):
-    pass
 
 class Camera(object):
     def checkLocation(self):
@@ -302,14 +300,116 @@ class Box(pygame.sprite.Sprite):
         self.image = pygame.image.load(image)
         self.rect = self.image.get_rect()
         self.width, self.height = self.image.get_size()
+        self.cursor_img = pygame.image.load("cursor.gif")
+        self.cursor_rect = self.cursor_img.get_rect()
+
+        self.cursor_left_pos = 37
+        self.cursor_right_pos = 117
+        self.cursor_top_pos = 37
+        self.cursor_bottom_pos = 57
+        
+        self.cursor_rect.left = self.cursor_left_pos
+        self.cursor_rect.top = self.cursor_top_pos
+        
         self.rect.left = xPos
         self.rect.top = yPos
         self.box_blit = False
 
     def draw(self):
         if self.box_blit == True:
-            p1.moveUp = p1.moveDown = p1.moveLeft = p1.moveRight = False
+            p1.moveUp = p1.moveDown = p1.moveLeft = p1.moveRight = False            
+            
+            self.talk = gameFont.render("Talk", True, (WHITE))
+            self.check = gameFont.render("Check", True, (WHITE))
+            self.items = gameFont.render("Items", True, (WHITE))
+            self.stats = gameFont.render("Stats", True, (WHITE))
+
+            self.talk_rect = self.talk.get_rect()
+            self.check_rect = self.check.get_rect()
+            self.items_rect = self.items.get_rect()
+            self.stats_rect = self.stats.get_rect()
+            
             windowSurface.blit(self.image, self.rect)
+            windowSurface.blit(self.talk, (50, 30))
+            windowSurface.blit(self.check, (130, 30))
+            windowSurface.blit(self.items, (50, 50))
+            windowSurface.blit(self.stats, (130, 50))
+
+            self.cursor_tag = "Talk"
+
+            self.cursorInput()
+
+    def cursorInput(self):
+        self.cursor_tag = self.cursor_tag
+        self.cursor_rect.left = self.cursor_rect.left
+        self.cursor_rect.top = self.cursor_rect.top        
+        
+        if p1.downPressed == True:
+            if self.cursor_rect.left == self.cursor_left_pos and self.cursor_rect.top == self.cursor_top_pos:
+                self.cursor_tag = "Items"
+                self.cursor_rect.top = self.cursor_bottom_pos
+            elif self.cursor_rect.left == self.cursor_right_pos and self.cursor_rect.top == self.cursor_top_pos:
+                self.cursor_tag = "Stats"
+                self.cursor_rect.top = self.cursor_bottom_pos
+            elif self.cursor_rect.left == self.cursor_left_pos and self.cursor_rect.top == self.cursor_bottom_pos:
+                self.cursor_tag = "Talk"
+                self.cursor_rect.top = self.cursor_top_pos
+            elif self.cursor_rect.left == self.cursor_right_pos and self.cursor_rect.top == self.cursor_bottom_pos:
+                self.cursor_tag = "Check"
+                self.cursor_rect.top = self.cursor_top_pos
+            pygame.time.delay(30)
+
+        if p1.upPressed == True:
+            if self.cursor_rect.left == self.cursor_left_pos and self.cursor_rect.top == self.cursor_top_pos:
+                self.cursor_tag = "Items"
+                self.cursor_rect.top = self.cursor_bottom_pos
+            elif self.cursor_rect.left == self.cursor_right_pos and self.cursor_rect.top == self.cursor_top_pos:
+                self.cursor_tag = "Stats"
+                self.cursor_rect.top = self.cursor_bottom_pos
+            elif self.cursor_rect.left == self.cursor_left_pos and self.cursor_rect.top == self.cursor_bottom_pos:
+                self.cursor_tag = "Talk"
+                self.cursor_rect.top = self.cursor_top_pos
+            elif self.cursor_rect.left == self.cursor_right_pos and self.cursor_rect.top == self.cursor_bottom_pos:
+                self.cursor_tag = "Check"
+                self.cursor_rect.top = self.cursor_top_pos
+            pygame.time.delay(30)
+
+        if p1.leftPressed == True:
+            if self.cursor_rect.left == self.cursor_left_pos and self.cursor_rect.top == self.cursor_top_pos:
+                self.cursor_tag = "Check"
+                self.cursor_rect.left = self.cursor_right_pos
+            elif self.cursor_rect.left == self.cursor_right_pos and self.cursor_rect.top == self.cursor_top_pos:
+                self.cursor_tag = "Talk"
+                self.cursor_rect.left = self.cursor_left_pos
+            elif self.cursor_rect.left == self.cursor_left_pos and self.cursor_rect.top == self.cursor_bottom_pos:
+                self.cursor_tag = "Stats"
+                self.cursor_rect.left = self.cursor_right_pos
+            elif self.cursor_rect.left == self.cursor_right_pos and self.cursor_rect.top == self.cursor_bottom_pos:
+                self.cursor_tag = "Items"
+                self.cursor_rect.left = self.cursor_left_pos
+            pygame.time.delay(30)
+
+        if p1.rightPressed == True:
+            if self.cursor_rect.left == self.cursor_left_pos and self.cursor_rect.top == self.cursor_top_pos:
+                self.cursor_tag = "Check"
+                self.cursor_rect.left = self.cursor_right_pos
+            elif self.cursor_rect.left == self.cursor_right_pos and self.cursor_rect.top == self.cursor_top_pos:
+                self.cursor_tag = "Talk"
+                self.cursor_rect.left = self.cursor_left_pos
+            elif self.cursor_rect.left == self.cursor_left_pos and self.cursor_rect.top == self.cursor_bottom_pos:
+                self.cursor_tag = "Stats"
+                self.cursor_rect.left = self.cursor_right_pos
+            elif self.cursor_rect.left == self.cursor_right_pos and self.cursor_rect.top == self.cursor_bottom_pos:
+                self.cursor_tag = "Items"
+                self.cursor_rect.left = self.cursor_left_pos
+            pygame.time.delay(30)
+
+        pygame.time.delay(80)
+           
+
+        
+
+        windowSurface.blit(self.cursor_img, self.cursor_rect)     
 
 def levelTop():
     levelOne.isTop = True
@@ -371,6 +471,7 @@ def main():
         [b.blockPlayer(p1) for b in levelOne.block_list]
 
         menuBox.draw()
+        #menuBox.cursor()
                
         [levelOne.block_list.remove(b) for b in levelOne.block_list]
         [levelOne.entities_list.remove(e) for e in levelOne.entities_list]
@@ -412,6 +513,8 @@ windowSurface = pygame.display.set_mode((WINDOWWIDTH, WINDOWHEIGHT), 0, 32)
 pygame.display.set_caption('Summer Adventure Test')
 mainClock = pygame.time.Clock()
 
+gameFont = pygame.font.SysFont("comicsansms", 15)
+
 menuBox = Box("menubox.gif", 20, 20)
 
 levelOne = Level()
@@ -419,7 +522,7 @@ levelOne = Level()
 p1 = Player()
 
 sea = Background(0, 0, 'sea.gif')
-land = Background(50, 50, 'land.gif')
+land = Background(100, 50, 'land.gif')
 
 mid_b1 = Block(land.rect.top + 100, land.rect.left + 200, 'tree.gif')
 mid_b2 = Block(land.rect.top + 300, 350, 'tree.gif')
@@ -433,3 +536,4 @@ camera = Camera()
 moveConductor = pyganim.PygConductor(p1.animObjs)
 
 main()
+
